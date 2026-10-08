@@ -1,0 +1,207 @@
+{% extends "base.html" %} {% block title %}Create New Bot - BotSaaS{% endblock
+%} {% block content %}
+<div class="max-w-3xl mx-auto py-6 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="px-4 py-6 sm:px-0">
+    <div class="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+      <a href="/dashboard" class="hover:text-gray-700">Dashboard</a>
+      <i class="fas fa-chevron-right text-xs"></i>
+      <a href="/dashboard/bots" class="hover:text-gray-700">My Bots</a>
+      <i class="fas fa-chevron-right text-xs"></i>
+      <span class="text-gray-900">Create New Bot</span>
+    </div>
+
+    <h1 class="text-2xl font-semibold text-gray-900">Create New Chatbot</h1>
+    <p class="mt-1 text-sm text-gray-600">
+      Configure your AI chatbot's basic settings. You can always change these
+      later.
+    </p>
+  </div>
+
+  <!-- Create Form -->
+  <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+    <form id="createBotForm" class="space-y-6 p-6">
+      <!-- Bot Name -->
+      <div>
+        <label for="name" class="block text-sm font-medium text-gray-700">
+          Bot Name <span class="text-red-500">*</span>
+        </label>
+        <div class="mt-1">
+          <input
+            type="text"
+            name="name"
+            id="name"
+            required
+            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+            placeholder="e.g., Customer Support Bot"
+          />
+        </div>
+        <p class="mt-1 text-xs text-gray-500">
+          Give your bot a descriptive name
+        </p>
+      </div>
+
+      <!-- Description -->
+      <div>
+        <label
+          for="description"
+          class="block text-sm font-medium text-gray-700"
+        >
+          Description (Optional)
+        </label>
+        <div class="mt-1">
+          <textarea
+            id="description"
+            name="description"
+            rows="3"
+            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+            placeholder="What is this bot for?"
+          ></textarea>
+        </div>
+        <p class="mt-1 text-xs text-gray-500">
+          Brief description to help you remember the bot's purpose
+        </p>
+      </div>
+
+      <!-- Welcome Message -->
+      <div>
+        <label
+          for="welcome_message"
+          class="block text-sm font-medium text-gray-700"
+        >
+          Welcome Message
+        </label>
+        <div class="mt-1">
+          <input
+            type="text"
+            name="welcome_message"
+            id="welcome_message"
+            class="shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+            value="Hello! How can I help you?"
+          />
+        </div>
+        <p class="mt-1 text-xs text-gray-500">
+          The first message visitors will see when they open the chat
+        </p>
+      </div>
+
+      <!-- Primary Color -->
+      <div>
+        <label
+          for="primary_color"
+          class="block text-sm font-medium text-gray-700"
+        >
+          Brand Color
+        </label>
+        <div class="mt-1 flex items-center space-x-3">
+          <input
+            type="color"
+            name="primary_color"
+            id="primary_color"
+            value="#3B82F6"
+            class="h-10 w-20 block border border-gray-300 rounded-md cursor-pointer"
+          />
+          <span class="text-sm text-gray-500" id="colorValue">#3B82F6</span>
+        </div>
+        <p class="mt-1 text-xs text-gray-500">
+          Choose a color that matches your brand
+        </p>
+      </div>
+
+      <!-- Plan Info -->
+      <div class="bg-blue-50 rounded-lg p-4">
+        <div class="flex">
+          <div class="flex-shrink-0">
+            <i class="fas fa-info-circle text-blue-400"></i>
+          </div>
+          <div class="ml-3 flex-1">
+            <h3 class="text-sm font-medium text-blue-800">
+              Your current plan: {{ current_user.plan_type|capitalize }}
+            </h3>
+            <div class="mt-2 text-sm text-blue-700">
+              <p>
+                You can create up to {% if current_user.plan_type == 'free' %}1
+                bot {% elif current_user.plan_type == 'pro' %}5 bots {% else
+                %}100 bots{% endif %}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Form Actions -->
+      <div class="flex justify-end space-x-3 pt-5 border-t">
+        <a
+          href="/dashboard/bots"
+          class="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          Cancel
+        </a>
+        <button
+          type="submit"
+          class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <i class="fas fa-spinner fa-spin hidden mr-2" id="spinner"></i>
+          Create Bot
+        </button>
+      </div>
+
+      <!-- Error Message -->
+      <div
+        id="errorMessage"
+        class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+        role="alert"
+      >
+        <span class="block sm:inline"></span>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document
+    .getElementById("primary_color")
+    .addEventListener("input", function (e) {
+      document.getElementById("colorValue").textContent = e.target.value;
+    });
+
+  document
+    .getElementById("createBotForm")
+    .addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const spinner = document.getElementById("spinner");
+      const errorDiv = document.getElementById("errorMessage");
+
+      // Hide previous error
+      errorDiv.classList.add("hidden");
+      spinner.classList.remove("hidden");
+
+      try {
+        const response = await fetch("/dashboard/api/bots", {
+          method: "POST",
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          // Success - redirect to bots list
+          window.location.href = "/dashboard/bots";
+        } else {
+          // Show error
+          errorDiv.querySelector("span").textContent =
+            data.detail || "Error creating bot";
+          errorDiv.classList.remove("hidden");
+        }
+      } catch (error) {
+        errorDiv.querySelector("span").textContent =
+          "Network error. Please try again.";
+        errorDiv.classList.remove("hidden");
+      } finally {
+        spinner.classList.add("hidden");
+      }
+    });
+</script>
+{% endblock %}

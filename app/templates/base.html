@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}BotSaaS{% endblock %}</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Font Awesome -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/style.css" />
+
+    {% block extra_css %}{% endblock %}
+  </head>
+  <body class="bg-gray-50">
+    {% if request.cookies.get('access_token') %}
+    <!-- Navigation for logged in users -->
+    <nav class="bg-white shadow-lg border-b">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between h-16">
+          <div class="flex">
+            <div class="flex-shrink-0 flex items-center">
+              <a href="/dashboard" class="text-xl font-bold text-blue-600">
+                <i class="fas fa-robot mr-2"></i>BotSaaS
+              </a>
+            </div>
+            <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
+              <a
+                href="/dashboard"
+                class="nav-link {% if request.url.path == '/dashboard' %}active{% endif %}"
+              >
+                <i class="fas fa-home mr-1"></i>Dashboard
+              </a>
+              <a
+                href="/dashboard/bots"
+                class="nav-link {% if '/bots' in request.url.path %}active{% endif %}"
+              >
+                <i class="fas fa-robot mr-1"></i>My Bots
+              </a>
+              <a
+                href="/dashboard/documents"
+                class="nav-link {% if '/documents' in request.url.path %}active{% endif %}"
+              >
+                <i class="fas fa-file-alt mr-1"></i>Documents
+              </a>
+            </div>
+          </div>
+          <div class="flex items-center">
+            <div class="ml-3 relative dropdown">
+              <button
+                class="flex items-center text-sm rounded-full focus:outline-none"
+                id="user-menu"
+              >
+                <span class="mr-2 text-gray-700">{{ current_user.name }}</span>
+                <i class="fas fa-chevron-down text-gray-400"></i>
+              </button>
+              <div
+                class="dropdown-menu hidden absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1"
+              >
+                <a
+                  href="/auth/logout"
+                  class="block px-4 py-2 text-sm text-red-600 hover:bg-gray-100"
+                >
+                  <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main>{% block content %}{% endblock %}</main>
+
+    <!-- JavaScript -->
+    <script src="/static/js/dashboard.js"></script>
+
+    <script>
+      // Dropdown toggle
+      document
+        .getElementById("user-menu")
+        ?.addEventListener("click", function () {
+          document.querySelector(".dropdown-menu").classList.toggle("hidden");
+        });
+
+      window.addEventListener("click", function (e) {
+        if (!e.target.closest(".dropdown")) {
+          document.querySelector(".dropdown-menu")?.classList.add("hidden");
+        }
+      });
+    </script>
+
+    {% block extra_js %}{% endblock %}
+  </body>
+</html>

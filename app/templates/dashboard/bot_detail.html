@@ -1,0 +1,594 @@
+{% extends "base.html" %} {% block title %}{{ bot.name }} - BotSaaS{% endblock
+%} {% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+  <!-- Header -->
+  <div class="px-4 py-6 sm:px-0">
+    <div class="flex items-center space-x-2 text-sm text-gray-500 mb-4">
+      <a href="/dashboard" class="hover:text-gray-700">Dashboard</a>
+      <i class="fas fa-chevron-right text-xs"></i>
+      <a href="/dashboard/bots" class="hover:text-gray-700">My Bots</a>
+      <i class="fas fa-chevron-right text-xs"></i>
+      <span class="text-gray-900">{{ bot.name }}</span>
+    </div>
+
+    <div class="flex justify-between items-center">
+      <div class="flex items-center space-x-4">
+        <div
+          class="h-16 w-16 rounded-lg flex items-center justify-center"
+          style="background-color: {{ bot.primary_color }}20; color: {{ bot.primary_color }}"
+        >
+          <i class="fas fa-robot text-3xl"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-semibold text-gray-900">{{ bot.name }}</h1>
+          {% if bot.description %}
+          <p class="text-sm text-gray-500">{{ bot.description }}</p>
+          {% endif %}
+          <p class="text-xs text-gray-400 mt-1">
+            Created {{ bot.created_at.strftime('%b %d, %Y') }}
+          </p>
+        </div>
+      </div>
+      <div class="flex space-x-3">
+        <button
+          onclick="getEmbedCode('{{ bot.id }}')"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+        >
+          <i class="fas fa-code mr-2"></i>
+          Get Embed Code
+        </button>
+        <button
+          onclick="deleteBot()"
+          class="inline-flex items-center px-4 py-2 border border-red-300 shadow-sm text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50"
+        >
+          <i class="fas fa-trash mr-2"></i>
+          Delete
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="border-b border-gray-200">
+    <nav class="-mb-px flex space-x-8 px-4 sm:px-0">
+      <button
+        onclick="showTab('settings')"
+        id="tab-settings"
+        class="tab-button border-blue-500 text-blue-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+      >
+        Settings
+      </button>
+      <button
+        onclick="showTab('documents')"
+        id="tab-documents"
+        class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+      >
+        Documents ({{ document_count }})
+      </button>
+      <button
+        onclick="showTab('analytics')"
+        id="tab-analytics"
+        class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+      >
+        Analytics
+      </button>
+      <button
+        onclick="showTab('conversations')"
+        id="tab-conversations"
+        class="tab-button border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm"
+      >
+        Conversations
+      </button>
+    </nav>
+  </div>
+
+  <!-- Settings Tab -->
+  <div id="tab-settings-content" class="mt-6">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+          Bot Settings
+        </h3>
+        <p class="mt-1 text-sm text-gray-500">
+          Configure your chatbot's behavior and appearance
+        </p>
+      </div>
+
+      <form
+        id="updateBotForm"
+        class="border-t border-gray-200 px-4 py-5 sm:px-6 space-y-6"
+      >
+        <input type="hidden" name="bot_id" value="{{ bot.id }}" />
+
+        <!-- Bot Name -->
+        <div>
+          <label for="name" class="block text-sm font-medium text-gray-700"
+            >Bot Name</label
+          >
+          <input
+            type="text"
+            name="name"
+            id="name"
+            value="{{ bot.name }}"
+            class="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+          />
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label
+            for="description"
+            class="block text-sm font-medium text-gray-700"
+            >Description</label
+          >
+          <textarea
+            name="description"
+            id="description"
+            rows="3"
+            class="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+          >
+{{ bot.description or '' }}</textarea
+          >
+        </div>
+
+        <!-- Welcome Message -->
+        <div>
+          <label
+            for="welcome_message"
+            class="block text-sm font-medium text-gray-700"
+            >Welcome Message</label
+          >
+          <input
+            type="text"
+            name="welcome_message"
+            id="welcome_message"
+            value="{{ bot.welcome_message }}"
+            class="mt-1 shadow-sm focus:ring-blue-500 focus:border-blue-500 block w-full sm:text-sm border-gray-300 rounded-md"
+          />
+        </div>
+
+        <!-- Primary Color -->
+        <div>
+          <label
+            for="primary_color"
+            class="block text-sm font-medium text-gray-700"
+            >Brand Color</label
+          >
+          <div class="mt-1 flex items-center space-x-3">
+            <input
+              type="color"
+              name="primary_color"
+              id="primary_color"
+              value="{{ bot.primary_color }}"
+              class="h-10 w-20 block border border-gray-300 rounded-md cursor-pointer"
+            />
+            <span class="text-sm text-gray-500" id="colorValue"
+              >{{ bot.primary_color }}</span
+            >
+          </div>
+        </div>
+
+        <!-- API Key (Read Only) -->
+        <div>
+          <label for="api_key" class="block text-sm font-medium text-gray-700"
+            >API Key</label
+          >
+          <div class="mt-1 flex rounded-md shadow-sm">
+            <input
+              type="text"
+              name="api_key"
+              id="api_key"
+              value="{{ bot.api_key }}"
+              readonly
+              class="focus:ring-blue-500 focus:border-blue-500 flex-1 block w-full rounded-none rounded-l-md sm:text-sm border-gray-300 bg-gray-50"
+            />
+            <button
+              type="button"
+              onclick="copyApiKey()"
+              class="inline-flex items-center px-3 rounded-r-md border border-l-0 border-gray-300 bg-gray-50 text-gray-500 text-sm hover:bg-gray-100"
+            >
+              <i class="far fa-copy mr-1"></i> Copy
+            </button>
+          </div>
+          <button
+            type="button"
+            onclick="resetApiKey()"
+            class="mt-2 text-sm text-red-600 hover:text-red-800"
+          >
+            <i class="fas fa-key mr-1"></i> Reset API Key
+          </button>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-end">
+          <button
+            type="submit"
+            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
+          >
+            Save Changes
+          </button>
+        </div>
+
+        <!-- Success/Error Messages -->
+        <div
+          id="updateSuccess"
+          class="hidden bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative"
+        >
+          <span class="block sm:inline"></span>
+        </div>
+        <div
+          id="updateError"
+          class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative"
+        >
+          <span class="block sm:inline"></span>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Documents Tab -->
+  <div id="tab-documents-content" class="mt-6 hidden">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div class="px-4 py-5 sm:px-6 flex justify-between items-center">
+        <div>
+          <h3 class="text-lg leading-6 font-medium text-gray-900">
+            Training Documents
+          </h3>
+          <p class="mt-1 text-sm text-gray-500">
+            Upload documents to train your chatbot
+          </p>
+        </div>
+        <a
+          href="/dashboard/documents?bot_id={{ bot.id }}"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+        >
+          <i class="fas fa-upload mr-2"></i>
+          Manage Documents
+        </a>
+      </div>
+
+      {% if document_count > 0 %}
+      <div class="border-t border-gray-200">
+        <div
+          class="px-4 py-3 bg-gray-50 text-xs font-medium text-gray-500 uppercase tracking-wider"
+        >
+          Recent Documents
+        </div>
+        <!-- Document list would go here -->
+        <p class="px-4 py-3 text-sm text-gray-500">
+          {{ document_count }} document(s) uploaded
+        </p>
+      </div>
+      {% else %}
+      <div class="border-t border-gray-200 px-4 py-8 text-center">
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4"
+        >
+          <i class="fas fa-file-alt text-2xl text-gray-400"></i>
+        </div>
+        <p class="text-gray-500 mb-4">No documents uploaded yet</p>
+        <a
+          href="/dashboard/documents?bot_id={{ bot.id }}"
+          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
+        >
+          <i class="fas fa-upload mr-2"></i>
+          Upload Your First Document
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Analytics Tab -->
+  <div id="tab-analytics-content" class="mt-6 hidden">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg p-6">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Coming Soon</h3>
+      <p class="text-gray-500">
+        Analytics dashboard is under development. You'll soon be able to see:
+      </p>
+      <ul class="mt-2 list-disc list-inside text-sm text-gray-500">
+        <li>Total conversations</li>
+        <li>Message volume</li>
+        <li>User satisfaction</li>
+        <li>Popular questions</li>
+        <li>Token usage</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Conversations Tab -->
+  <div id="tab-conversations-content" class="mt-6 hidden">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg">
+      <div class="px-4 py-5 sm:px-6">
+        <h3 class="text-lg leading-6 font-medium text-gray-900">
+          Recent Conversations
+        </h3>
+        <p class="mt-1 text-sm text-gray-500">
+          View your bot's recent interactions
+        </p>
+      </div>
+
+      {% if conversations and conversations|length > 0 %}
+      <div class="border-t border-gray-200">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Session
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Messages
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Started
+                </th>
+                <th
+                  scope="col"
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                >
+                  Last Activity
+                </th>
+              </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+              {% for conv in conversations %}
+              <tr>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                  {{ conv.session_id[:8] }}...
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ conv.message_count }} messages
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ conv.created_at.strftime('%Y-%m-%d %H:%M') }}
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  {{ conv.last_message.strftime('%Y-%m-%d %H:%M') if
+                  conv.last_message else 'N/A' }}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% else %}
+      <div class="border-t border-gray-200 px-4 py-8 text-center">
+        <div
+          class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4"
+        >
+          <i class="fas fa-comments text-2xl text-gray-400"></i>
+        </div>
+        <p class="text-gray-500">No conversations yet</p>
+        <p class="text-sm text-gray-400 mt-1">
+          Once visitors start chatting, they'll appear here
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Include the embed modal from bots.html -->
+{% include "dashboard/embed_modal.html" %}
+
+<script>
+  // Tab switching
+  function showTab(tab) {
+    // Hide all content
+    document.getElementById("tab-settings-content").classList.add("hidden");
+    document.getElementById("tab-documents-content").classList.add("hidden");
+    document.getElementById("tab-analytics-content").classList.add("hidden");
+    document
+      .getElementById("tab-conversations-content")
+      .classList.add("hidden");
+
+    // Update tab buttons
+    document.querySelectorAll(".tab-button").forEach((btn) => {
+      btn.classList.remove("border-blue-500", "text-blue-600");
+      btn.classList.add("border-transparent", "text-gray-500");
+    });
+
+    // Show selected
+    document
+      .getElementById(`tab-${tab}`)
+      .classList.remove("border-transparent", "text-gray-500");
+    document
+      .getElementById(`tab-${tab}`)
+      .classList.add("border-blue-500", "text-blue-600");
+    document.getElementById(`tab-${tab}-content`).classList.remove("hidden");
+  }
+
+  // Color picker
+  document
+    .getElementById("primary_color")
+    ?.addEventListener("input", function (e) {
+      document.getElementById("colorValue").textContent = e.target.value;
+    });
+
+  // Update bot
+  document
+    .getElementById("updateBotForm")
+    ?.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(e.target);
+      const botId = formData.get("bot_id");
+      const successDiv = document.getElementById("updateSuccess");
+      const errorDiv = document.getElementById("updateError");
+
+      // Hide previous messages
+      successDiv.classList.add("hidden");
+      errorDiv.classList.add("hidden");
+
+      try {
+        const response = await fetch(`/dashboard/api/bots/${botId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            name: formData.get("name"),
+            description: formData.get("description"),
+            welcome_message: formData.get("welcome_message"),
+            primary_color: formData.get("primary_color"),
+          }),
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          successDiv.querySelector("span").textContent =
+            "Settings updated successfully!";
+          successDiv.classList.remove("hidden");
+          setTimeout(() => successDiv.classList.add("hidden"), 3000);
+        } else {
+          errorDiv.querySelector("span").textContent =
+            data.detail || "Error updating bot";
+          errorDiv.classList.remove("hidden");
+        }
+      } catch (error) {
+        errorDiv.querySelector("span").textContent =
+          "Network error. Please try again.";
+        errorDiv.classList.remove("hidden");
+      }
+    });
+
+  // Copy API key
+  function copyApiKey() {
+    const apiKey = document.getElementById("api_key");
+    apiKey.select();
+    navigator.clipboard.writeText(apiKey.value).then(() => {
+      alert("API key copied to clipboard!");
+    });
+  }
+
+  // Reset API key
+  async function resetApiKey() {
+    if (
+      !confirm("Are you sure? The old API key will stop working immediately.")
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/dashboard/api/bots/{{ bot.id }}/reset-key`,
+        {
+          method: "POST",
+        },
+      );
+
+      const data = await response.json();
+
+      if (response.ok) {
+        document.getElementById("api_key").value = data.api_key;
+        alert("API key reset successfully!");
+      } else {
+        alert("Error resetting API key");
+      }
+    } catch (error) {
+      alert("Network error. Please try again.");
+    }
+  }
+
+  // Delete bot
+  async function deleteBot() {
+    if (
+      !confirm(
+        "Are you sure you want to delete this bot? All documents, embeddings, and conversations will be permanently deleted.",
+      )
+    ) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/dashboard/api/bots/{{ bot.id }}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        window.location.href = "/dashboard/bots";
+      } else {
+        alert("Error deleting bot");
+      }
+    } catch (error) {
+      alert("Network error. Please try again.");
+    }
+  }
+
+  // Embed code modal (same as in bots.html)
+  async function getEmbedCode(botId) {
+    try {
+      const response = await fetch(`/embed/code/${botId}`);
+      const data = await response.json();
+
+      document.getElementById("iframeCode").textContent = data.iframe;
+      document.getElementById("scriptCode").textContent = data.script;
+      document.getElementById("embedModal").classList.remove("hidden");
+    } catch (error) {
+      alert("Error getting embed code");
+    }
+  }
+
+  function showTab(tab) {
+    document
+      .getElementById("tab-iframe")
+      .classList.remove("border-blue-500", "text-blue-600");
+    document
+      .getElementById("tab-iframe")
+      .classList.add("border-transparent", "text-gray-500");
+    document
+      .getElementById("tab-script")
+      .classList.remove("border-blue-500", "text-blue-600");
+    document
+      .getElementById("tab-script")
+      .classList.add("border-transparent", "text-gray-500");
+
+    document.getElementById("tab-iframe-content").classList.add("hidden");
+    document.getElementById("tab-script-content").classList.add("hidden");
+
+    if (tab === "iframe") {
+      document
+        .getElementById("tab-iframe")
+        .classList.remove("border-transparent", "text-gray-500");
+      document
+        .getElementById("tab-iframe")
+        .classList.add("border-blue-500", "text-blue-600");
+      document.getElementById("tab-iframe-content").classList.remove("hidden");
+    } else {
+      document
+        .getElementById("tab-script")
+        .classList.remove("border-transparent", "text-gray-500");
+      document
+        .getElementById("tab-script")
+        .classList.add("border-blue-500", "text-blue-600");
+      document.getElementById("tab-script-content").classList.remove("hidden");
+    }
+  }
+
+  function copyCode(elementId) {
+    const code = document.getElementById(elementId).textContent;
+    navigator.clipboard.writeText(code).then(() => {
+      alert("Code copied to clipboard!");
+    });
+  }
+
+  function closeModal() {
+    document.getElementById("embedModal").classList.add("hidden");
+  }
+
+  // Set default tab
+  showTab("settings");
+</script>
+{% endblock %}
